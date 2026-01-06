@@ -30,5 +30,35 @@ A simple, private, and fully local chat integration for Home Assistant. It allow
 
 This integration does not use a UI config flow yet. You **must** add the following line to your `configuration.yaml` to enable it:
 
+    ha_chat:
+
+**Restart Home Assistant** after adding this line.
+
+### Step 3: Setup the Frontend Card
+
+Since this is a hybrid integration, you need to register the JavaScript card manually.
+
+1. Locate the file `ha-chat-card.js`.
+   * *If you used HACS:* It should be located inside `config/custom_components/ha_chat/dist/`.
+   * *If manual:* Use the file from the `dist` folder of this repo.
+2. Copy `ha-chat-card.js` to your Home Assistant `config/www/` folder.
+3. Go to **Settings** > **Dashboards** > **3 dots (top right)** > **Resources**.
+4. Click **+ Add Resource**.
+5. Enter the following details:
+   * **URL:** `/local/ha-chat-card.js`
+   * **Resource type:** `JavaScript Module`
+6. Click **Create**.
+
+> **Note:** If you just created the `www` folder for the first time, you must restart Home Assistant.
+
+## Usage
+
+Add the custom card to any of your dashboards.
+
+1. Edit your Dashboard.
+2. Click **+ Add Card**.
+3. Scroll down to "Manual".
+4. Enter the following YAML configuration:
+
 ```yaml
-ha_chat:
+type: custom:ha-chat-card
