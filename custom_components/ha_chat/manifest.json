@@ -1,0 +1,10 @@
+{
+  "domain": "ha_chat",
+  "name": "Home Assistant Local Chat",
+  "version": "1.0.0",
+  "documentation": "https://github.com/lupzn",
+  "dependencies": [],
+  "codeowners": ["@lupzn"],
+  "requirements": [],
+  "iot_class": "local_push"
+}

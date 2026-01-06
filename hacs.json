@@ -1,0 +1,12 @@
+{
+  "name": "Home Assistant Local Chat",
+  "render_readme": true,
+  "filename": "ha_chat",
+  "manifest": {
+    "manifest.json": true,
+    "hacs.json": true,
+    "README.md": true,
+    "LICENSE": true,
+    "dist/ha-chat-card.js": true
+  }
+}

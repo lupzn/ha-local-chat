@@ -1,0 +1,13 @@
+send_message:
+  name: Send Message
+  description: Sends a chat message.
+  fields:
+    message:
+      description: The content of the message.
+      required: true
+      selector:
+        text:
+
+get_history:
+  name: Get History
+  description: Triggers an event with the chat history (used by frontend on load).
