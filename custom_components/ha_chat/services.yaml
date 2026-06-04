@@ -1,0 +1,26 @@
+send_message:
+  name: Send Message
+  description: Sends a chat message to the local Home Assistant chat.
+  fields:
+    message:
+      name: Message
+      description: The content of the message (max. 2000 characters).
+      required: true
+      example: "Hallo zusammen 👋"
+      selector:
+        text:
+          multiline: true
+
+delete_message:
+  name: Delete Message
+  description: >-
+    Deletes a chat message by its ID. Only the original author or an admin
+    is allowed to delete a message.
+  fields:
+    message_id:
+      name: Message ID
+      description: The unique ID of the message to delete.
+      required: true
+      example: "a1b2c3d4e5f6"
+      selector:
+        text:

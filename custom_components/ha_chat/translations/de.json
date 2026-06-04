@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Assistant Local Chat",
+        "description": "Lokalen Chat einrichten. Es ist keine Konfiguration nötig — einfach auf „Absenden“ klicken."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Bereits eingerichtet. Es ist nur eine Instanz möglich."
+    }
+  }
+}
