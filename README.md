@@ -67,7 +67,7 @@ Edit a dashboard → **+ Add Card** → search **“Local Chat Card”** (if it 
 
 ```yaml
 type: custom:ha-chat-card
-title: Haus Chat      # optional — card header
+title: Familien-Chat  # optional — omit for no header
 height: 320           # optional — chat area height in px
 ```
 
@@ -84,7 +84,7 @@ height: 320           # optional — chat area height in px
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `title` | string | `Haus Chat` | Card header text |
+| `title` | string | _(none)_ | Card header — leave empty for no header |
 | `height` | number / string | `320` | Height of the chat area, in px |
 
 **Services**

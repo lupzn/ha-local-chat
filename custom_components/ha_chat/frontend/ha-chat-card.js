@@ -15,7 +15,7 @@ const EMOJIS = [
 ];
 
 console.info(
-  "%c HA-LOCAL-CHAT %c v2.2.1 ",
+  "%c HA-LOCAL-CHAT %c v2.2.2 ",
   "color:#fff;background:#03a9f4;font-weight:700;border-radius:3px 0 0 3px;padding:2px 6px;",
   "color:#03a9f4;background:#e1f5fe;border-radius:0 3px 3px 0;padding:2px 6px;"
 );
@@ -35,7 +35,7 @@ class HaChatCard extends HTMLElement {
   }
 
   static getStubConfig() {
-    return { title: "Haus Chat", height: 320 };
+    return { height: 320 };
   }
 
   setConfig(config) {
@@ -46,7 +46,8 @@ class HaChatCard extends HTMLElement {
   _applyConfig() {
     // Apply title/height live (so the visual editor preview updates instantly).
     if (!this.content) return;
-    this.content.header = this._config.title || "Haus Chat";
+    // Empty title → no header at all.
+    this.content.header = this._config.title || "";
     const container = this.shadowRoot.getElementById("chat-container");
     if (container) {
       const h = this._config.height;
@@ -298,7 +299,8 @@ class HaChatCard extends HTMLElement {
   render() {
     const cfg = this._config || {};
     const card = document.createElement("ha-card");
-    card.header = cfg.title || "Haus Chat";
+    // Only show a header if a title is configured (empty = no header).
+    card.header = cfg.title || "";
 
     const height =
       typeof cfg.height === "number"

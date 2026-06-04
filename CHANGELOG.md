@@ -3,6 +3,11 @@
 All notable changes to **Home Assistant Local Chat** are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.2] — 2026-06-04
+
+### Changed
+- 🏷️ **No default title.** The card no longer falls back to "Haus Chat". Leave the title empty for a header-less card; set a title in the visual editor (or `title:` in YAML) to show one.
+
 ## [2.2.1] — 2026-06-04
 
 ### Fixed
