@@ -3,6 +3,11 @@
 All notable changes to **Home Assistant Local Chat** are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] — 2026-06-04
+
+### Fixed
+- 🐛 **Card now registers reliably.** The frontend registration (Lovelace resource + module URL) ran during `async_setup`, when the `lovelace` component may not be loaded yet — so it was silently skipped and the card could fail with *“Custom element doesn't exist: ha-chat-card.”* It now runs on `EVENT_HOMEASSISTANT_STARTED` (or immediately if HA is already running), as recommended by the official guide. The static file route is still registered up front.
+
 ## [2.2.0] — 2026-06-04
 
 ### Added

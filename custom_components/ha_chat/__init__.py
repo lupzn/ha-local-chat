@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -43,11 +44,23 @@ CARD_URL_VERSIONED = f"{CARD_URL}?v={INTEGRATION_VERSION}"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the frontend card + websocket once; import legacy YAML if present."""
-    await _async_register_frontend(hass)
+    """Register the frontend card + websocket; import legacy YAML if present."""
+    # The static file route only needs `http` (a hard dependency) → register now.
+    await _async_register_static_path(hass)
 
     # History is sent point-to-point over WebSocket (no global broadcast → no flicker).
     websocket_api.async_register_command(hass, websocket_get_messages)
+
+    # Loading the card (module URL + Lovelace resource) needs `lovelace` to be
+    # ready. During boot that is NOT the case yet, so defer until HA has started.
+    async def _setup_card(_event=None) -> None:
+        _async_add_module_url(hass)
+        await _async_register_lovelace_resource(hass)
+
+    if hass.state == CoreState.running:
+        await _setup_card()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _setup_card)
 
     # Legacy `ha_chat:` in configuration.yaml → migrate into a config entry once.
     if DOMAIN in config:
@@ -162,17 +175,9 @@ def websocket_get_messages(hass, connection, msg) -> None:
     connection.send_result(msg["id"], {"messages": messages})
 
 
-async def _async_register_frontend(hass: HomeAssistant) -> None:
-    """Serve the card folder and make the card available on dashboards.
-
-    Three layers, each best-effort, so a failure in one never blocks setup:
-      1) serve the `frontend/` folder over HTTP,
-      2) load the module globally via `add_extra_js_url` (works in any mode),
-      3) register a real Lovelace resource (storage mode) for the card editor.
-    """
+async def _async_register_static_path(hass: HomeAssistant) -> None:
+    """Serve the `frontend/` folder over HTTP (needs only the `http` component)."""
     frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
-
-    # 1) Serve the folder (not a single file) — matches the canonical pattern.
     try:
         from homeassistant.components.http import StaticPathConfig
 
@@ -185,22 +190,24 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     except RuntimeError:
         # Already registered (e.g. on reload) — fine.
         pass
+    _LOGGER.info("HA Local Chat card served at %s", CARD_URL_VERSIONED)
 
-    # 2) Load the module on the frontend regardless of Lovelace mode.
+
+@callback
+def _async_add_module_url(hass: HomeAssistant) -> None:
+    """Load the card module on every dashboard (works in any Lovelace mode)."""
     try:
         add_extra_js_url(hass, CARD_URL_VERSIONED)
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("add_extra_js_url failed: %s", err)
 
-    # 3) Register a proper Lovelace resource so the card editor lists it.
-    _async_register_lovelace_resource(hass)
 
-    _LOGGER.info("HA Local Chat card served at %s", CARD_URL_VERSIONED)
+async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
+    """Best-effort: add the card to Lovelace resources (storage mode only).
 
-
-@callback
-def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
-    """Best-effort: add the card to Lovelace resources (storage mode only)."""
+    Runs after HA has started, so `lovelace` and its resource collection are
+    guaranteed to be available here.
+    """
     lovelace = hass.data.get("lovelace")
     if lovelace is None:
         return
@@ -209,30 +216,27 @@ def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
     if mode != "storage" or resources is None:
         return
 
-    async def _register() -> None:
-        try:
-            if not getattr(resources, "loaded", False):
-                # Load the resource collection from storage if needed.
-                if hasattr(resources, "async_load"):
-                    await resources.async_load()
-            for item in resources.async_items():
-                if str(item.get("url", "")).split("?")[0] == CARD_URL:
-                    # Bump the ?v= version on update so browsers reload the card.
-                    if item.get("url") != CARD_URL_VERSIONED:
-                        await resources.async_update_item(
-                            item["id"],
-                            {"res_type": "module", "url": CARD_URL_VERSIONED},
-                        )
-                        _LOGGER.info(
-                            "HA Local Chat: Lovelace resource updated to %s",
-                            CARD_URL_VERSIONED,
-                        )
-                    return  # already registered
-            await resources.async_create_item(
-                {"res_type": "module", "url": CARD_URL_VERSIONED}
-            )
-            _LOGGER.info("HA Local Chat: Lovelace resource registered (%s)", CARD_URL)
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Lovelace resource registration skipped: %s", err)
+    try:
+        if not getattr(resources, "loaded", False) and hasattr(resources, "async_load"):
+            await resources.async_load()
 
-    hass.async_create_task(_register())
+        for item in resources.async_items():
+            if str(item.get("url", "")).split("?")[0] == CARD_URL:
+                # Bump the ?v= version on update so browsers reload the card.
+                if item.get("url") != CARD_URL_VERSIONED:
+                    await resources.async_update_item(
+                        item["id"],
+                        {"res_type": "module", "url": CARD_URL_VERSIONED},
+                    )
+                    _LOGGER.info(
+                        "HA Local Chat: Lovelace resource updated to %s",
+                        CARD_URL_VERSIONED,
+                    )
+                return  # already registered
+
+        await resources.async_create_item(
+            {"res_type": "module", "url": CARD_URL_VERSIONED}
+        )
+        _LOGGER.info("HA Local Chat: Lovelace resource registered (%s)", CARD_URL)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Lovelace resource registration skipped: %s", err)

@@ -15,7 +15,7 @@ const EMOJIS = [
 ];
 
 console.info(
-  "%c HA-LOCAL-CHAT %c v2.2.0 ",
+  "%c HA-LOCAL-CHAT %c v2.2.1 ",
   "color:#fff;background:#03a9f4;font-weight:700;border-radius:3px 0 0 3px;padding:2px 6px;",
   "color:#03a9f4;background:#e1f5fe;border-radius:0 3px 3px 0;padding:2px 6px;"
 );
