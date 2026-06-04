@@ -3,6 +3,13 @@
 All notable changes to **Home Assistant Local Chat** are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.2] — 2026-06-04
+
+### Fixed
+- 🧩 **Card now reliably appears in the picker.** It is registered as a real **Lovelace resource** (storage mode) and served from a `frontend/` folder — the official integration pattern — instead of relying on `add_extra_js_url` + a single-file static path alone. The module URL is version-stamped (`?v=…`) for cache-busting.
+
+> **Note:** a config-flow integration only loads after it has been added once under **Settings → Devices & Services → + Add Integration** — that is what registers the card.
+
 ## [2.1.1] — 2026-06-04
 
 ### Fixed

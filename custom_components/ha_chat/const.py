@@ -21,6 +21,8 @@ MAX_MESSAGE_LENGTH = 2000  # Max. Zeichen pro Nachricht
 STORAGE_KEY = "ha_chat_history"
 STORAGE_VERSION = 1
 
-# Frontend-Auslieferung (Karte wird automatisch geladen)
+# Frontend delivery — the `frontend/` folder is served over HTTP, the card is
+# auto-registered as a Lovelace resource (storage mode) and loaded as a module.
+INTEGRATION_VERSION = "2.1.2"
 JS_FILENAME = "ha-chat-card.js"
-URL_PATH = "/ha_chat_static/ha-chat-card.js"
+URL_BASE = "/ha_chat_frontend"

@@ -19,6 +19,7 @@ from .const import (
     DOMAIN,
     EVENT_CHAT_MESSAGE,
     EVENT_CHAT_MESSAGE_DELETED,
+    INTEGRATION_VERSION,
     JS_FILENAME,
     MAX_HISTORY,
     MAX_MESSAGE_LENGTH,
@@ -26,22 +27,23 @@ from .const import (
     SERVICE_SEND,
     STORAGE_KEY,
     STORAGE_VERSION,
-    URL_PATH,
+    URL_BASE,
     WS_GET_MESSAGES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-# Accept an empty `ha_chat:` YAML block (legacy) and import it into a config entry.
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 SEND_SCHEMA = vol.Schema({vol.Required("message"): cv.string})
 DELETE_SCHEMA = vol.Schema({vol.Required("message_id"): cv.string})
 
+CARD_URL = f"{URL_BASE}/{JS_FILENAME}"
+CARD_URL_VERSIONED = f"{CARD_URL}?v={INTEGRATION_VERSION}"
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the frontend card + websocket once; import legacy YAML if present."""
-    # Serve + auto-load the Lovelace card (no manual www copy / resource needed).
     await _async_register_frontend(hass)
 
     # History is sent point-to-point over WebSocket (no global broadcast → no flicker).
@@ -85,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if len(msg_text) > MAX_MESSAGE_LENGTH:
             msg_text = msg_text[:MAX_MESSAGE_LENGTH]
 
-        # Identify the calling user
         user_name = "System"
         user_id = None
         if call.context.user_id:
@@ -111,11 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_fire(EVENT_CHAT_MESSAGE, {"message": new_msg})
 
     async def handle_delete_message(call: ServiceCall) -> None:
-        """Handle deleting a chat message.
-
-        Only the original author or an admin may delete a message.
-        Permission is enforced here on the server, not just in the UI.
-        """
+        """Handle deleting a chat message (author or admin only)."""
         message_id = call.data["message_id"]
 
         user_id = call.context.user_id
@@ -166,18 +163,66 @@ def websocket_get_messages(hass, connection, msg) -> None:
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
-    """Register the card's JS as a static path and load it on every dashboard."""
-    js_path = os.path.join(os.path.dirname(__file__), JS_FILENAME)
+    """Serve the card folder and make the card available on dashboards.
 
+    Three layers, each best-effort, so a failure in one never blocks setup:
+      1) serve the `frontend/` folder over HTTP,
+      2) load the module globally via `add_extra_js_url` (works in any mode),
+      3) register a real Lovelace resource (storage mode) for the card editor.
+    """
+    frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
+
+    # 1) Serve the folder (not a single file) — matches the canonical pattern.
     try:
         from homeassistant.components.http import StaticPathConfig
 
         await hass.http.async_register_static_paths(
-            [StaticPathConfig(URL_PATH, js_path, False)]
+            [StaticPathConfig(URL_BASE, frontend_dir, False)]
         )
     except ImportError:
         # Fallback for Home Assistant < 2024.7
-        hass.http.register_static_path(URL_PATH, js_path, False)
+        hass.http.register_static_path(URL_BASE, frontend_dir, False)
+    except RuntimeError:
+        # Already registered (e.g. on reload) — fine.
+        pass
 
-    add_extra_js_url(hass, URL_PATH)
-    _LOGGER.info("HA Local Chat card served at %s", URL_PATH)
+    # 2) Load the module on the frontend regardless of Lovelace mode.
+    try:
+        add_extra_js_url(hass, CARD_URL_VERSIONED)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("add_extra_js_url failed: %s", err)
+
+    # 3) Register a proper Lovelace resource so the card editor lists it.
+    _async_register_lovelace_resource(hass)
+
+    _LOGGER.info("HA Local Chat card served at %s", CARD_URL_VERSIONED)
+
+
+@callback
+def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
+    """Best-effort: add the card to Lovelace resources (storage mode only)."""
+    lovelace = hass.data.get("lovelace")
+    if lovelace is None:
+        return
+    mode = getattr(lovelace, "mode", getattr(lovelace, "resource_mode", "yaml"))
+    resources = getattr(lovelace, "resources", None)
+    if mode != "storage" or resources is None:
+        return
+
+    async def _register() -> None:
+        try:
+            if not getattr(resources, "loaded", False):
+                # Load the resource collection from storage if needed.
+                if hasattr(resources, "async_load"):
+                    await resources.async_load()
+            for item in resources.async_items():
+                if str(item.get("url", "")).split("?")[0] == CARD_URL:
+                    return  # already registered
+            await resources.async_create_item(
+                {"res_type": "module", "url": CARD_URL_VERSIONED}
+            )
+            _LOGGER.info("HA Local Chat: Lovelace resource registered (%s)", CARD_URL)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Lovelace resource registration skipped: %s", err)
+
+    hass.async_create_task(_register())

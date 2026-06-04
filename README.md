@@ -131,7 +131,7 @@ ha-local-chat/
 │   ├── const.py           ← constants (events, limits, storage keys)
 │   ├── manifest.json
 │   ├── services.yaml      ← send_message / delete_message
-│   ├── ha-chat-card.js    ← Lovelace card (auto-loaded, UTF-8)
+│   ├── frontend/          ← ha-chat-card.js (served + auto-registered)
 │   ├── strings.json · translations/   ← setup dialog (en, de)
 │   └── brand/             ← icon.png · icon@2x.png (HA 2026.3+ local brand)
 ├── hacs.json · icon.png
