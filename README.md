@@ -1,7 +1,7 @@
 # Home Assistant Local Chat 💬
 
 <p align="center">
-  <img src="icon.png" alt="HA Local Chat Logo" width="96" height="96">
+  <img src="icon.png" alt="HA Local Chat" width="96" height="96">
 </p>
 
 <p align="center">
@@ -23,8 +23,8 @@
 
 ## 🎯 Why this?
 
-Home Assistant is the hub everyone in the household already looks at — yet there
-is no built-in way to leave each other a quick message on the dashboard.
+Home Assistant is the screen everyone in the household already looks at — yet
+there's no built-in way to leave each other a quick message on the dashboard.
 Notifications are one-way; chat-style alternatives need cloud accounts.
 
 **HA Local Chat** adds a real chat card that runs **100 % inside your own
@@ -33,18 +33,19 @@ the event bus, and never touch an external server.
 
 ---
 
-## ✨ Features (v2.0)
+## ✨ Features
 
 | Feature | What it does |
 |---------|--------------|
 | 💬 **Real-time chat** | Messages appear instantly on every open dashboard via the HA event bus |
-| 💾 **Persistent history** | Last 100 messages survive a restart (stored in `.storage`) |
-| 👤 **User identity** | Uses the logged-in HA user's name automatically; avatars with initials |
-| 🗑️ **Delete & moderate** | Delete your own messages; **admins** can delete any message — enforced server-side |
-| 😊 **Emoji picker** | Built-in emoji panel, full UTF-8 — perfect for wall tablets without an emoji keyboard |
-| 🧱 **Real chat feel** | Date separators (Today / Yesterday), multi-line input (Shift+Enter), auto-scroll |
+| 💾 **Persistent history** | The last 100 messages survive a restart (stored locally in `.storage`) |
+| 👤 **Identity & avatars** | Uses the logged-in HA user's name; coloured initials avatars |
+| 🗑️ **Delete & moderate** | Delete your own messages; **admins** can delete any — enforced server-side |
+| 😊 **Emoji picker** | Built-in emoji panel, full UTF-8 — great for wall tablets without an emoji keyboard |
+| 🛠️ **Visual editor** | Set title and height in the UI; leave the title empty for a header-less card |
+| 🧱 **Real chat feel** | Date separators (Today / Yesterday), multi-line input (Shift+Enter), smart auto-scroll |
 | 🎨 **Themed** | Follows your Home Assistant light/dark theme automatically |
-| 🔌 **Zero-setup card** | The Lovelace card registers itself — no `www` copying, no resource entry |
+| 🔌 **One-click setup** | Add it from the UI — no YAML, no `www` copying, no manual Lovelace resource |
 
 See [`ROADMAP.md`](./ROADMAP.md) for what's planned next.
 
@@ -52,42 +53,44 @@ See [`ROADMAP.md`](./ROADMAP.md) for what's planned next.
 
 ## 🚀 Installation
 
-### 1. Install via HACS (recommended)
-1. HACS → Integrations → ⋮ (top right) → **Custom repositories**
+### 1 · Install via HACS (recommended)
+1. **HACS → Integrations → ⋮ (top right) → Custom repositories**
 2. Add `https://github.com/lupzn/ha-local-chat`, category **Integration**
 3. Install **Home Assistant Local Chat**, then **restart Home Assistant**
 
-*(Manual alternative: copy `custom_components/ha_chat` into `config/custom_components/`, then restart.)*
+> Manual alternative: copy `custom_components/ha_chat` into `config/custom_components/`, then restart.
 
-### 2. Add the integration — no YAML
-Go to **Settings → Devices & Services → + Add Integration**, search **“Home Assistant Local Chat”** and click **Submit**. No `configuration.yaml`, no `www` copying, no Lovelace resource — the chat card registers itself.
+### 2 · Add the integration
+**Settings → Devices & Services → + Add Integration** → search **“Home Assistant Local Chat”** → **Submit**.
 
-### 3. Add the card
-Edit a dashboard → **+ Add Card** → search **“Local Chat Card”** (if it isn't listed yet, hard-refresh the browser with Ctrl/Cmd + Shift + R), or pick *Manual* and paste:
+That's the only setup step. No `configuration.yaml`, no `www` copying, no Lovelace resource — the chat card registers itself.
+
+### 3 · Add the card to a dashboard
+Edit a dashboard → **+ Add Card** → search **“Local Chat Card”**.
+
+> First time the card isn't listed? **Hard-refresh** the browser (Ctrl/Cmd + Shift + R) — the frontend is cached — then reopen the picker.
+
+You can also add it manually (*+ Add Card → Manual*):
 
 ```yaml
 type: custom:ha-chat-card
-title: Familien-Chat  # optional — omit for no header
-height: 320           # optional — chat area height in px
+# title: Familien-Chat   # optional — omit for no header
+# height: 320            # optional — chat-area height in px
 ```
-
-> **Upgrading from v1?** The card now loads itself. Remove the old manual setup
-> to avoid duplicates: delete `ha-chat-card.js` from `config/www/` and remove
-> the `/local/ha-chat-card.js` entry under **Settings → Dashboards → Resources**,
-> then restart.
 
 ---
 
-## ⚙️ Configuration & services
+## ⚙️ Configuration
 
-**Card options** — set them in the **visual editor** (⋮ → Edit card, no YAML needed) or in YAML:
+Open the card's **⋮ → Edit** to use the **visual editor** — or set the same
+options in YAML:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `title` | string | _(none)_ | Card header — leave empty for no header |
-| `height` | number / string | `320` | Height of the chat area, in px |
+| `title` | string | _(none)_ | Header text — **leave empty for no header** |
+| `height` | number | `320` | Height of the chat area, in px |
 
-**Services**
+### Services
 
 | Service | Description |
 |---------|-------------|
@@ -98,7 +101,7 @@ Example — post a note when someone gets home:
 
 ```yaml
 automation:
-  - alias: "Chat: Ankunft melden"
+  - alias: "Chat: arrival note"
     trigger:
       - platform: state
         entity_id: person.daniele
@@ -106,16 +109,21 @@ automation:
     action:
       - service: ha_chat.send_message
         data:
-          message: "🏠 {{ trigger.to_state.name }} ist zu Hause."
+          message: "🏠 {{ trigger.to_state.name }} is home."
 ```
+
+### Deleting messages
+Hover a message and click the 🗑 icon. You can always delete **your own**
+messages; **administrators** can delete **anyone's**. The check is enforced in
+the backend, so it can't be bypassed from the UI.
 
 ---
 
 ## 🔒 Privacy & security
 
-- **100 % local** — messages stay in your HA instance, no external servers, no telemetry.
-- **XSS-safe** — messages render as plain text, so no HTML/script injection.
-- **Server-side moderation** — delete permission (author / admin) is checked in the backend, not just hidden in the UI.
+- **100 % local** — messages stay in your instance, no external servers, no telemetry.
+- **XSS-safe** — messages render as plain text, so no HTML/script injection is possible.
+- **Server-side moderation** — delete permission (author / admin) is verified in the backend.
 
 Full policy: [`PRIVACY.md`](./PRIVACY.md).
 
@@ -126,14 +134,14 @@ Full policy: [`PRIVACY.md`](./PRIVACY.md).
 ```
 ha-local-chat/
 ├── custom_components/ha_chat/
-│   ├── __init__.py        ← backend: services, WebSocket history, storage, auto-register
-│   ├── config_flow.py     ← UI setup (no YAML)
-│   ├── const.py           ← constants (events, limits, storage keys)
+│   ├── __init__.py                  ← backend: services, WebSocket history, storage, frontend registration
+│   ├── config_flow.py               ← one-click UI setup (no YAML)
+│   ├── const.py                     ← constants (events, limits, storage keys, URLs)
 │   ├── manifest.json
-│   ├── services.yaml      ← send_message / delete_message
-│   ├── frontend/          ← ha-chat-card.js (served + auto-registered)
-│   ├── strings.json · translations/   ← setup dialog (en, de)
-│   └── brand/             ← icon.png · icon@2x.png (HA 2026.3+ local brand)
+│   ├── services.yaml                ← send_message / delete_message
+│   ├── strings.json + translations/ ← setup dialog (en, de)
+│   ├── frontend/ha-chat-card.js      ← Lovelace card (served + auto-registered)
+│   └── brand/                       ← icon.png, icon@2x.png (HA 2026.3+ local brand)
 ├── hacs.json · icon.png
 ├── README.md · ROADMAP.md · PRIVACY.md · CHANGELOG.md
 └── LICENSE · NOTICE
@@ -147,24 +155,35 @@ ha-local-chat/
   messages in Home Assistant's `Store` (`.storage/ha_chat_history`).
 - **Sending** fires a `ha_chat_message` event on the event bus; every open card
   appends it instantly.
-- **Deleting** checks author/admin server-side, then fires
+- **Deleting** verifies author/admin server-side, then fires
   `ha_chat_message_deleted` so all cards drop the message.
 - **History** is fetched point-to-point via the WebSocket command
   `ha_chat/get_messages` — no global broadcast, so other dashboards don't flicker.
-- **The card** is served as a static file and injected with `add_extra_js_url`,
-  so users never touch Lovelace resources.
+- **The card** is served from the integration's `frontend/` folder and
+  registered (as a Lovelace resource + module URL) once Home Assistant has
+  finished starting — so it appears automatically, no manual resource needed.
 
 ---
 
 ## 🧰 Troubleshooting
 
-**The “Local Chat Card” doesn't appear in the card picker (or “Custom element doesn't exist: ha-chat-card”):**
+**Card not in the picker, or “Custom element doesn't exist: ha-chat-card”:**
 
-1. Make sure you actually updated to **v2.0.0+** in HACS and **restarted Home Assistant**. (v1 did not register a card.)
-2. Confirm the integration loaded: **Developer Tools → Actions**, search `ha_chat` — you should see `ha_chat.send_message`. If it's missing, ensure `ha_chat:` is in your `configuration.yaml`, restart, and check **Settings → System → Logs** for `ha_chat`.
-3. **Hard-refresh** the browser (Ctrl/Cmd + Shift + R) to drop the cached frontend, then reopen the card picker.
+1. **Add the integration first.** Settings → Devices & Services → it must be
+   listed. This is a config-flow integration — it only loads (and registers the
+   card) once it has been added.
+2. Make sure you're on the **latest version** in HACS and **restarted HA**.
+3. **Hard-refresh** the browser (Ctrl/Cmd + Shift + R) — the frontend is cached.
 
-**Manual fallback (always works):** copy `custom_components/ha_chat/ha-chat-card.js` to `/config/www/`, then add a dashboard resource under **Settings → Dashboards → Resources** — URL `/local/ha-chat-card.js`, type **JavaScript Module** — and hard-refresh.
+Quick checks:
+- Open `http://YOUR-HA:8123/ha_chat_frontend/ha-chat-card.js` — you should see
+  JavaScript, not a 404.
+- The browser console should log `HA-LOCAL-CHAT vX.Y.Z` when the card loads.
+
+**Manual fallback (always works):** copy
+`custom_components/ha_chat/frontend/ha-chat-card.js` to `/config/www/`, add a
+dashboard resource (**Settings → Dashboards → ⋮ → Resources**) with URL
+`/local/ha-chat-card.js`, type **JavaScript Module**, then hard-refresh.
 
 ---
 
