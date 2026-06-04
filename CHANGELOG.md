@@ -3,6 +3,11 @@
 All notable changes to **Home Assistant Local Chat** are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] — 2026-06-04
+
+### Added
+- 🛠️ **Visual card editor** — configure the card from the UI, no YAML: **chat title** and **chat height**. The preview updates live as you type.
+
 ## [2.1.2] — 2026-06-04
 
 ### Fixed

@@ -217,6 +217,16 @@ def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
                     await resources.async_load()
             for item in resources.async_items():
                 if str(item.get("url", "")).split("?")[0] == CARD_URL:
+                    # Bump the ?v= version on update so browsers reload the card.
+                    if item.get("url") != CARD_URL_VERSIONED:
+                        await resources.async_update_item(
+                            item["id"],
+                            {"res_type": "module", "url": CARD_URL_VERSIONED},
+                        )
+                        _LOGGER.info(
+                            "HA Local Chat: Lovelace resource updated to %s",
+                            CARD_URL_VERSIONED,
+                        )
                     return  # already registered
             await resources.async_create_item(
                 {"res_type": "module", "url": CARD_URL_VERSIONED}

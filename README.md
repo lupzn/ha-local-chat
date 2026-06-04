@@ -80,7 +80,7 @@ height: 320           # optional — chat area height in px
 
 ## ⚙️ Configuration & services
 
-**Card options**
+**Card options** — set them in the **visual editor** (⋮ → Edit card, no YAML needed) or in YAML:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|

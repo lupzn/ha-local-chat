@@ -23,6 +23,6 @@ STORAGE_VERSION = 1
 
 # Frontend delivery — the `frontend/` folder is served over HTTP, the card is
 # auto-registered as a Lovelace resource (storage mode) and loaded as a module.
-INTEGRATION_VERSION = "2.1.2"
+INTEGRATION_VERSION = "2.2.0"
 JS_FILENAME = "ha-chat-card.js"
 URL_BASE = "/ha_chat_frontend"

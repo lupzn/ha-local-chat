@@ -15,7 +15,7 @@ const EMOJIS = [
 ];
 
 console.info(
-  "%c HA-LOCAL-CHAT %c v2.0.0 ",
+  "%c HA-LOCAL-CHAT %c v2.2.0 ",
   "color:#fff;background:#03a9f4;font-weight:700;border-radius:3px 0 0 3px;padding:2px 6px;",
   "color:#03a9f4;background:#e1f5fe;border-radius:0 3px 3px 0;padding:2px 6px;"
 );
@@ -30,8 +30,28 @@ class HaChatCard extends HTMLElement {
   }
 
   // ---- Lovelace lifecycle ---------------------------------------------
+  static getConfigElement() {
+    return document.createElement("ha-chat-card-editor");
+  }
+
+  static getStubConfig() {
+    return { title: "Haus Chat", height: 320 };
+  }
+
   setConfig(config) {
     this._config = config || {};
+    this._applyConfig();
+  }
+
+  _applyConfig() {
+    // Apply title/height live (so the visual editor preview updates instantly).
+    if (!this.content) return;
+    this.content.header = this._config.title || "Haus Chat";
+    const container = this.shadowRoot.getElementById("chat-container");
+    if (container) {
+      const h = this._config.height;
+      container.style.height = typeof h === "number" ? `${h}px` : h || "320px";
+    }
   }
 
   set hass(hass) {
@@ -394,5 +414,65 @@ if (!window.customCards.some((c) => c.type === "ha-chat-card")) {
     name: "Local Chat Card",
     description: "Privater, lokaler Chat fürs Dashboard (ha-local-chat).",
     preview: false,
+    documentationURL: "https://github.com/lupzn/ha-local-chat",
   });
+}
+
+// ---- Visual config editor (GUI options: title + height) ---------------
+class HaChatCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = config || {};
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _render() {
+    if (!this._hass || !this._config) return;
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.addEventListener("value-changed", (e) => this._valueChanged(e));
+      this.appendChild(this._form);
+    }
+    this._form.hass = this._hass;
+    this._form.data = { height: 320, ...this._config };
+    this._form.schema = [
+      { name: "title", selector: { text: {} } },
+      {
+        name: "height",
+        selector: {
+          number: {
+            min: 150,
+            max: 1200,
+            step: 10,
+            mode: "box",
+            unit_of_measurement: "px",
+          },
+        },
+      },
+    ];
+    this._form.computeLabel = (s) =>
+      ({ title: "Titel des Chats", height: "Höhe des Chatbereichs" }[s.name] ||
+        s.name);
+  }
+
+  _valueChanged(ev) {
+    const config = {
+      type: (this._config && this._config.type) || "custom:ha-chat-card",
+      ...ev.detail.value,
+    };
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+}
+if (!customElements.get("ha-chat-card-editor")) {
+  customElements.define("ha-chat-card-editor", HaChatCardEditor);
 }
