@@ -17,6 +17,8 @@
   <a href="https://www.paypal.com/donate/?hosted_button_id=X8MG6CZK2PETS"><img src="https://img.shields.io/badge/PayPal-Donate-ffc439?logo=paypal&logoColor=white" alt="Donate via PayPal"></a>
 </p>
 
+> ✅ **Stable release — v2.2.2.** Production-ready and installable via HACS. See the [latest release](https://github.com/lupzn/ha-local-chat/releases/latest) and the [changelog](./CHANGELOG.md).
+
 > **Unofficial** community integration — not affiliated with or endorsed by Home Assistant or Nabu Casa.
 
 ---
